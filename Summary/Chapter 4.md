@@ -119,4 +119,8 @@ dependencies {
 <img width="550" alt="스크린샷 2019-03-12 오후 10 25 15" src="https://user-images.githubusercontent.com/34764544/54203500-baac6200-4515-11e9-81c9-bd9acb594a7d.png">
 <br>
 
+- domain : Model 또는 DTO(Data Transfer Oject) 클래스
+- service : BO (Business Object) 클래스
+- repository : DAO (Data Access Object) 클래스
+
 ### 4.3.2 스프링 부트 웹 스타터 살펴보기
