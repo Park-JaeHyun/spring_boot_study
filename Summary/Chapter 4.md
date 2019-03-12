@@ -7,6 +7,7 @@
 - MVC 패턴으로 사용자의 요청에 따른 데이터 처리
 
 
+<img width="526" alt="스크린샷 2019-03-12 오후 9 33 54" src="https://user-images.githubusercontent.com/34764544/54200758-6ef6ba00-450f-11e9-90e3-cbca1e0e83c9.png">
 
 
 
