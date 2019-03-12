@@ -111,7 +111,6 @@ dependencies {
 #### 디렉토리 구조
 
 <img width="550" alt="스크린샷 2019-03-12 오후 10 25 15" src="https://user-images.githubusercontent.com/34764544/54203500-baac6200-4515-11e9-81c9-bd9acb594a7d.png">
-<br>
 
 - domain : Model 또는 DTO(Data Transfer Oject) 클래스
 - service : BO (Business Object) 클래스
@@ -122,7 +121,6 @@ dependencies {
 ### 4.3.2 스프링 부트 웹 스타터 살펴보기
 
 <img width="550" alt="스크린샷 2019-03-12 오후 10 39 22" src="https://user-images.githubusercontent.com/34764544/54204515-b5e8ad80-4517-11e9-874d-fe2fe2ecb809.png">
-<br>
 
 1. spring-boot-starter : 스프링 부트를 시작하는 기본적인 설정이 담겨있는 스타터
 
@@ -459,7 +457,6 @@ public class BoardService {
     }
 }
 ```
-<br>
 
 1. 서비스로 컴포넌트 정의
 
@@ -651,7 +648,6 @@ JSP, 타임리프, 프리마커, 무스타치, 그루비 템플릿 등이 서버
 tymeleaf-extras-java8time 의존성은 spring-boot-starter-thymeleaf 스타터에 포함
 
 <img width="450" alt="스크린샷 2019-03-13 오전 12 39 11" src="https://user-images.githubusercontent.com/34764544/54213843-724a6f80-4528-11e9-895a-5f90c08bb54b.png">
-<br>
 
 - 첫 번째 파라미터 : 포매팅 할 데이터
 - 두 번째 파라미터 : 지정하고 싶은 날짜 포맷
@@ -703,6 +699,7 @@ tymeleaf-extras-java8time 의존성은 spring-boot-starter-thymeleaf 스타터�
 2. pagealbe 객체 : 해당 페이지가 처음인지(isFirst) 마지막인지(isLast)에 대한 데이터(불린형)를 제공, 이전/다음 페이지 미노출 여부 결정
 
 3. th:each 구문 : startNumber, endNumber까지 출력, pageable은 현재 페이지를 알려주는 number 객체가 0 부터 시작, 현재 페이지임을 보여주는 'activity' 프로퍼티를 추가
+<br>
 <br>
 
 <img width="550" alt="스크린샷 2019-03-13 오전 1 02 43" src="https://user-images.githubusercontent.com/34764544/54215717-bee37a00-452b-11e9-8d19-e5483d5d5dad.png">
