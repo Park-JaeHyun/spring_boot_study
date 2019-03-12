@@ -59,13 +59,64 @@ Web, 타임리프, JPA, DevTools, 롬복, H2 라이브러리(인메모리 DB) �
 ### 4.3.1 프로젝트 의존성 구성
 
 ```java
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class SpringBootTestApplicationTests {
+buildscript {
+	// 빌드 스크립트 내부의 버전, 의존 라이브러리, 저장소를 설정해 스프링 부트 플러그인을 사용할 수 있게 함
+	ext {
+		springBootVersion = '2.1.3.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
 
-	    @Test
-	    public void contextLoads() {
-	    }
+// 필요한 플러그인 적용
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// spring
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// lombok [컴파일 시점만 필요하고 런타임 시점에는 필요없을 때 compileOnly 사용]
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// devtools
+	runtime 'org.springframework.boot:spring-boot-devtools'
+
+	// h2 [런타임 시점에만 H2 사용하도록 설정]
+	runtime 'com.h2database:h2'
+
+	// test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 ```
 <br>
+
+
+#### 디렉토리 구조
+
+<img width="550" alt="스크린샷 2019-03-12 오후 10 25 15" src="https://user-images.githubusercontent.com/34764544/54203500-baac6200-4515-11e9-81c9-bd9acb594a7d.png">
+<br>
+
+### 4.3.2 스프링 부트 웹 스타터 살펴보기
