@@ -31,14 +31,10 @@ MVC 패턴으로 사용자의 요청에 따른 데이터 처리
 - 게시판, 유저 1:1 관계
 <br>
 <br>
-<br>
-<br>
 
 ## 4.2 커뮤니티 프로젝트 준비하기
 
 Web, 타임리프, JPA, DevTools, 롬복, H2 라이브러리(인메모리 DB) 사용
-<br>
-<br>
 <br>
 <br>
 
@@ -123,6 +119,7 @@ dependencies {
 - service : BO (Business Object) 클래스
 - repository : DAO (Data Access Object) 클래스
 <br>
+<br>
 
 ### 4.3.2 스프링 부트 웹 스타터 살펴보기
 
@@ -140,6 +137,7 @@ dependencies {
 5. spring-web : HTTPIntegration, Servlet filters, Spirng HTTP invoikder 및 HTTP 코어를 포함시킨 라이브러리
 
 6. spring-webmvc : request를 전달하는 MVC로 디자인된 DispatcherServlet 기반의 라이브러리
+<br>
 <br>
 
 ### 4.3.3 도메인 매핑하기
@@ -299,8 +297,6 @@ public class User implements Serializable {
     }
 }
 ```
-<br>
-<br>
 <br>
 <br>
 
@@ -525,8 +521,6 @@ public class BoardController {
 5. return "/board/list" : src/resources/templates를 기준으로 데이터를 바인딩할 타깃의 뷰 경로를 지정
 <br>
 <br>
-<br>
-<br>
 
 ### 4.3.5 CommandLineRunner를 사용하여 DB에 데이터 넣기
 CommandLineRunner : 애플리케이션 구동 후 특정 코드를 실행시키고 싶을 때 직접 구현하는 인터페이스
@@ -584,8 +578,6 @@ public class SpringBootCommunityWebApplication {
 1. @Bean : 애노테이션 메서드에 사용하면 CommandLineRunner를 빈으로 등록한 후 메서드 파라미터를 DI 시켜줌
 
 2. CommandLineRunner : 정의한 코드를 실행
-<br>
-<br>
 <br>
 <br>
 
@@ -663,8 +655,6 @@ JSP, 타임리프, 프리마커, 무스타치, 그루비 템플릿 등이 서버
 3. th:each : 반복 구문, th:each="board : ${boardList}" -> boardList에 담긴 Board 객체를 순차 처리, Board 객체에 담긴 get* 메서드를 board.*로 접근 가능 (board.idx)
 <br>
 <br>
-<br>
-<br>
 
 ### 4.3.7 타임리프 자바 8 날짜 포맷 라이브러리 추가하기
 
@@ -675,8 +665,6 @@ tymeleaf-extras-java8time 의존성은 spring-boot-starter-thymeleaf 스타터�
 
 - 첫 번째 파라미터 : 포매팅 할 데이터
 - 두 번째 파라미터 : 지정하고 싶은 날짜 포맷
-<br>
-<br>
 <br>
 <br>
 
@@ -727,8 +715,6 @@ tymeleaf-extras-java8time 의존성은 spring-boot-starter-thymeleaf 스타터�
 3. th:each 구문 : startNumber, endNumber까지 출력, pageable은 현재 페이지를 알려주는 number 객체가 0 부터 시작, 현재 페이지임을 보여주는 'activity' 프로퍼티를 추가
 
 <img width="550" alt="스크린샷 2019-03-13 오전 1 02 43" src="https://user-images.githubusercontent.com/34764544/54215717-bee37a00-452b-11e9-8d19-e5483d5d5dad.png">
-<br>
-<br>
 <br>
 <br>
 
@@ -875,8 +861,6 @@ tymeleaf-extras-java8time 의존성은 spring-boot-starter-thymeleaf 스타터�
 1. {...?}처럼 구문 뒤에 '?'를 붙여서 null체크 추가해 값이 null인 경우 빈 값이 출력되도록 함
 
 <img width="550" alt="스크린샷 2019-03-13 오전 1 02 26" src="https://user-images.githubusercontent.com/34764544/54216056-52b54600-452c-11e9-8c73-0bc5f8ca8649.png">
-<br>
-<br>
 <br>
 <br>
 
