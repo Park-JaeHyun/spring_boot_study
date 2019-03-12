@@ -846,12 +846,14 @@ tymeleaf-extras-java8time 의존성은 spring-boot-starter-thymeleaf 스타터�
 ```
 
 1. {...?}처럼 구문 뒤에 '?'를 붙여서 null체크 추가해 값이 null인 경우 빈 값이 출력되도록 함
+<br>
+<br>
 
 <img width="550" alt="스크린샷 2019-03-13 오전 1 02 26" src="https://user-images.githubusercontent.com/34764544/54216056-52b54600-452c-11e9-8c73-0bc5f8ca8649.png">
 <br>
 <br>
 
-### 4.4 마치며
+## 4.4 마치며
 
 스프링 autoConfiguration 기능을 사용해서 설정을 최소화 할 수 있었음
 
