@@ -7,20 +7,23 @@
 - MVC 패턴으로 사용자의 요청에 따른 데이터 처리
 
 
-<img width="526" alt="스크린샷 2019-03-12 오후 9 33 54" src="https://user-images.githubusercontent.com/34764544/54200758-6ef6ba00-450f-11e9-90e3-cbca1e0e83c9.png">
+<img width="550" alt="스크린샷 2019-03-12 오후 9 33 54" src="https://user-images.githubusercontent.com/34764544/54200758-6ef6ba00-450f-11e9-90e3-cbca1e0e83c9.png">
+
+
+- 클라이언트로 데이터를 요청받은 서버는 타임리프(Thymeleaf)를 사용하여 뷰를 구성하여 보여줌
+
+- 간단한 CRUD (Create, Read, Update, Delete) 기능만 제공
+
+<img width="550" alt="스크린샷 2019-03-12 오후 9 43 56" src="https://user-images.githubusercontent.com/34764544/54200999-f47a6a00-450f-11e9-832b-1992c196a65a.png">
+
+### 타임리프란?
+웹 또는 독립적인 실행 환경에서 사용되는 자바 서버 사이드 템플릿 엔진
+
+
+###
 
 
 
-
-
-- 기본 제공 테스트 클래스명은 프로젝트명에 Tests를 붙인 형태로 자동 생성
-
-    ####  장점
-    - 실제 구동되는  애플리케이션과 동일하게 컨텍스트를 로드하여 하고 싶은 테스트 모두 수행 가능
-
-    #### 단점
-     - 애플리케이션에 설정된 빈을 모두 로드하기 때문에, 애플리케이션 규모가 클수록 느림
-<br>
 
 ### 기본 테스트
 ```java
@@ -34,13 +37,3 @@ public class SpringBootTestApplicationTests {
 }
 ```
 <br>
-
-### @RunWith
-
-- JUnit에 내장된 Runner를 사용하는 대신 어노테이션에 정의된 Runner를 사용
-
-- @SpringBootTest 어노테이션을 사용하려면 @RunWith(SpringRunner.class)를 꼭 붙여야함
-<br>
-
-
-### SpringBootTest 어노테이션 프로퍼티
