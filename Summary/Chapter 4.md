@@ -249,3 +249,188 @@ public class Board implements Serializable {
 - DB에 저장될 때는 User 객체가 저장되는 것이 아니라 User의 PK인 user_idx 값이 저장됨
 
 - FetchType eager/lazy가 있음, 전자는 Board 도메인을 조회할 때 즉시 관련 User 객체를 함께 조회, 후자는 User 객체를 조회하는 시점이 아닌 객체가 실제로 사용될 때 조회
+<br>
+<br>
+
+#### User 클래스 생성
+
+```java
+import lombok.Builder;
+
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+public class User implements Serializable {
+
+    @Id
+    @Column
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long idx;
+
+    @Column
+    private String name;
+
+    @Column
+    private String password;
+
+    @Column
+    private String email;
+
+    @Column
+    private LocalDateTime createDate;
+
+    @Column
+    private LocalDateTime updatedDate;
+
+    @Builder
+    public User(String name, String password, String email, LocalDateTime createDate, LocalDateTime updatedDate) {
+        this.name = name;
+        this.password = password;
+        this.email = email;
+        this.createDate = createDate;
+        this.updatedDate = updatedDate;
+    }
+}
+```
+<br>
+<br>
+<br>
+<br>
+
+### 4.3.4 도메인 테스트하기
+
+JPA에 대한 테스트를 지원하는 어노테이션으로 테스트 시 실행된 변경사항이 실제 DB에 반영되지 않음
+
+테스트를 수행하고 다시 테스트 이전의 데이터로 롤백
+
+H2 DB를 사용하면 스프링 부트가 구동할 때마다
+<br>
+
+#### JpaMappingTest 클래스 생성
+```java
+public enum BoardType {
+    notice("공지사항"),
+    free("자유게시판");
+
+    private String value;
+
+    BoardType(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return this.value;
+    }
+}
+```
+<br>
+
+#### UserRepository 클래스 생성
+
+```java
+import com.example.SpringBootCommunityWeb.domain.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    User findByEmail(String email);
+}
+```
+<br>
+
+#### BoardRepository 클래스 생성
+
+```java
+import com.example.SpringBootCommunityWeb.domain.Board;
+import com.example.SpringBootCommunityWeb.domain.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface BoardRepository extends JpaRepository<Board, Long> {
+    Board findByUser(User user);
+}
+```
+<br>
+
+#### Board 클래스 생성
+
+```java
+import com.example.SpringBootCommunityWeb.domain.Board;
+import com.example.SpringBootCommunityWeb.domain.User;
+import com.example.SpringBootCommunityWeb.domain.enums.BoardType;
+import com.example.SpringBootCommunityWeb.repository.BoardRepository;
+import com.example.SpringBootCommunityWeb.repository.UserRepository;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.time.LocalDateTime;
+
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+
+@RunWith(SpringRunner.class)
+@DataJpaTest
+public class JpaMappingTest {
+    private final String boardTestTitle = "테스트";
+    private final String email = "test@gmail.com";
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    BoardRepository boardRepository;
+
+    @Before
+    public void init() {
+        User user = userRepository.save(User.builder()
+                .name("havi")
+                .password("test")
+                .email(email)
+                .createDate(LocalDateTime.now())
+                .build());
+
+        boardRepository.save(Board.builder()
+        .title(boardTestTitle)
+        .subTitle("서브 타이틀")
+        .content("콘텐츠")
+        .boardType(BoardType.free)
+        .createDate(LocalDateTime.now())
+        .updateDate(LocalDateTime.now())
+        .user(user).build());
+    }
+
+    @Test
+    public void 제대로_생성됐는지_테스트() {
+        User user = userRepository.findByEmail(email);
+        assertThat(user.getName(), is("havi"));
+        assertThat(user.getPassword(), is("test"));
+        assertThat(user.getEmail(), is(email));
+
+        Board board = boardRepository.findByUser(user);
+        assertThat(board.getTitle(), is(boardTestTitle));
+        assertThat(board.getSubTitle(), is("서브 타이틀"));
+        assertThat(board.getContent(), is("콘텐츠"));
+        assertThat(board.getBoardType(), is(BoardType.free));
+    }
+}
+```
+<br>
+
+1. @RunWith : 정의된 클래스를 호출, JUnit의 확장 기능을 지정, 각 테스트 시 독립적인 애플리케이션 컨텍스트를 보장
+- IOC 객체를 빈 팩토리라 부르며, 빈 팩토리를 더 확장한 개념이 애플리케이션 컨텍스트
+
+2. @DataJpaTest : 첫 설계 시 엔티티 간의 관계 설정 및 기능 테스트를 도와줌, 테스트가 끝날 때마다 자동 롤백
+
+3. @Before : 각 테스트가 실행되기 전 실행될 메서드 정의
+
+4. @Test : 실제 테스트가 진행될 메서드
