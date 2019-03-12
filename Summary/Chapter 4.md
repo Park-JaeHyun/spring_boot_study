@@ -31,12 +31,12 @@ MVC 패턴으로 사용자의 요청에 따른 데이터 처리
 - 게시판, 유저 1:1 관계
 <br>
 <br>
+<br>
+<br>
 
 ## 4.2 커뮤니티 프로젝트 준비하기
 
 Web, 타임리프, JPA, DevTools, 롬복, H2 라이브러리(인메모리 DB) 사용
-<br>
-<br>
 <br>
 <br>
 <br>
@@ -54,9 +54,10 @@ Web, 타임리프, JPA, DevTools, 롬복, H2 라이브러리(인메모리 DB) �
 8. 페이징 처리하기
 9. 작성 폼 만들기
 <br>
+<br>
 
+### 4.3.1 프로젝트 의존성 구성
 
-### 기본 테스트
 ```java
 @RunWith(SpringRunner.class)
 @SpringBootTest
