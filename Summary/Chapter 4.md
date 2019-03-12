@@ -604,6 +604,284 @@ JSP, 타임리프, 프리마커, 무스타치, 그루비 템플릿 등이 서버
 #### 리스트 뷰 페이지 작성
 
 ```java
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>Board Form</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}"/>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}"/>
+</head>
 
+<body>
+
+<div th:replace="layout/header::header"></div>
+
+<div class="container">
+    <div class="page-header">
+        <h1>게시글 목록</h1>
+    </div>
+    <div class="pull-right" style="width:100px;margin:10px 0;">
+        <a href="/board" class="btn btn-primary btn-block">등록</a>
+    </div>
+    <br/><br/><br/>
+    <div id="mainHide">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th class="col-md-1">#</th>
+                <th class="col-md-2">서비스 분류</th>
+                <th class="col-md-5">제목</th>
+                <th class="col-md-2">작성 날짜</th>
+                <th class="col-md-2">수정 날짜</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="board : ${boardList}">
+                <td th:text="${board.idx}"></td>
+                <td th:text="${board.boardType.value}"></td>
+                <td><a th:href="'/board?idx='+${board.idx}" th:text="${board.title}"></a></td>
+                <td th:text="${board.createdDate} ? ${#temporals.format(board.createdDate,'yyyy-MM-dd HH:mm')} : ${board.createdDate}"></td>
+                <td th:text="${board.updatedDate} ? ${#temporals.format(board.updatedDate,'yyyy-MM-dd HH:mm')} : ${board.updatedDate}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div th:replace="layout/footer::footer"></div>
+
+</body>
+</html>
 ```
 <br>
+
+1. xmlns:th="http://www.thymeleaf.org" : th는 기존의 html을 효과적으로 대체하는 네임스페이스
+
+2. @{...} : 타임 링크의 기본 링크 표현 구문, server-relative URL 방식, 즉 동일 서버 내의 다른 컨택스트로 연결해주는 방식
+
+3. th:each : 반복 구문, th:each="board : ${boardList}" -> boardList에 담긴 Board 객체를 순차 처리, Board 객체에 담긴 get* 메서드를 board.*로 접근 가능 (board.idx)
+<br>
+<br>
+<br>
+<br>
+
+### 4.3.7 타임리프 자바 8 날짜 포맷 라이브러리 추가하기
+
+tymeleaf-extras-java8time 의존성은 spring-boot-starter-thymeleaf 스타터에 포함
+
+<img width="450" alt="스크린샷 2019-03-13 오전 12 39 11" src="https://user-images.githubusercontent.com/34764544/54213843-724a6f80-4528-11e9-895a-5f90c08bb54b.png">
+<br>
+
+- 첫 번째 파라미터 : 포매팅 할 데이터
+- 두 번째 파라미터 : 지정하고 싶은 날짜 포맷
+<br>
+<br>
+<br>
+<br>
+
+### 4.3.8 페이징 처리하기
+
+페이징 객체를 사용해서 뷰 쪽에 구현할 기능은 다음과 같음
+
+- 맨 처음으로 이동 버튼
+
+- 이전 페이지로 이동 버튼 (첫 페이지면 미노출)
+
+- 10 페이지 단위로 이동 버튼
+
+- 다음 페이지로 이동 버튼 (마지막 페이지면 미노출)
+
+- 맨 마지막 페이지로 이동 버튼
+<br>
+
+#### 리스트 뷰 페이지 작성
+
+```java
+<nav aria-label="Page navigation" style="text-align:center;">
+        <ul class="pagination"
+            th:with="startNumber=${T(Math).floor(boardList.number/10)}*10+1, endNumber=(${boardList.totalPages} > ${startNumber}+9) ? ${startNumber}+9 : ${boardList.totalPages}">
+            <li><a aria-label="Previous" href="/board/list?page=1">&laquo;</a></li>
+            <li th:style="${boardList.first} ? 'display:none'">
+                <a th:href="@{/board/list(page=${boardList.number})}">&lsaquo;</a>
+            </li>
+
+            <li th:each="page :${#numbers.sequence(startNumber, endNumber)}"
+                th:class="(${page} == ${boardList.number}+1) ? 'active'">
+                <a th:href="@{/board/list(page=${page})}" th:text="${page}"><span class="sr-only"></span></a>
+            </li>
+
+            <li th:style="${boardList.last} ? 'display:none'">
+                <a th:href="@{/board/list(page=${boardList.number}+2)}">&rsaquo;</a>
+            </li>
+            <li><a aria-label="Next" th:href="@{/board/list(page=${boardList.totalPages})}">&raquo;</a></li>
+        </ul>
+</nav>
+```
+<br>
+
+1. th:with 구문 : ul 태그 안에서 사용할 변수 정의, startNumber와 endNumber 변수로 페이지의 처음과 끝을 동적으로 계산하여 초기화, 변수 계산 로직은 기본 10 페이지 단위
+
+2. pagealbe 객체 : 해당 페이지가 처음인지(isFirst) 마지막인지(isLast)에 대한 데이터(불린형)를 제공, 이전/다음 페이지 미노출 여부 결정
+
+3. th:each 구문 : startNumber, endNumber까지 출력, pageable은 현재 페이지를 알려주는 number 객체가 0 부터 시작, 현재 페이지임을 보여주는 'activity' 프로퍼티를 추가
+
+<img width="550" alt="스크린샷 2019-03-13 오전 1 02 43" src="https://user-images.githubusercontent.com/34764544/54215717-bee37a00-452b-11e9-8d19-e5483d5d5dad.png">
+<br>
+<br>
+<br>
+<br>
+
+### 4.3.9 작성 폼 만들기
+
+```java
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Board Form</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}" />
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+</head>
+<body>
+<div th:replace="layout/header::header"></div>
+
+<div class="container">
+    <div class="page-header">
+        <h1>게시글 등록</h1>
+    </div>
+    <br/>
+    <input id="board_idx" type="hidden" th:value="${board?.idx}"/>
+    <input id="board_create_date" type="hidden" th:value="${board?.createdDate}"/>
+    <table class="table">
+        <tr>
+            <th style="padding:13px 0 0 15px">게시판 선택</th>
+            <td>
+                <div class="pull-left">
+                    <select class="form-control input-sm" id="board_type">
+                        <option>--분류--</option>
+                        <option th:value="notice" th:selected="${board?.boardType?.name() == 'notice'}">공지사항</option>
+                        <option th:value="free" th:selected="${board?.boardType?.name() == 'free'}">자유게시판</option>
+                    </select>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <th style="padding:13px 0 0 15px;">생성날짜</th>
+            <td><input type="text" class="col-md-1 form-control input-sm" readonly="readonly" th:value="${board?.createdDate} ? ${#temporals.format(board.createdDate,'yyyy-MM-dd HH:mm')} : ${board?.createdDate}"/></td>
+        </tr>
+        <tr>
+            <th style="padding:13px 0 0 15px;">제목</th>
+            <td><input id="board_title" type="text" class="col-md-1 form-control input-sm" th:value="${board?.title}"/></td>
+        </tr>
+        <tr>
+            <th style="padding:13px 0 0 15px;">부제목</th>
+            <td><input id="board_sub_title" type="text" class="col-md-1 form-control input-sm" th:value="${board?.subTitle}"/></td>
+        </tr>
+        <tr>
+            <th style="padding:13px 0 0 15px;">내용</th>
+            <td><textarea id="board_content" class="col-md-1 form-control input-sm" maxlength="140" rows="7" style="height: 200px;"
+                          th:text="${board?.content}"></textarea><span class="help-block"></span>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+    <div class="pull-left">
+        <a href="/board/list" class="btn btn-default">목록으로</a>
+    </div>
+    <div class="pull-right">
+        <button th:if="!${board?.idx}" type="button" class="btn btn-primary" id="insert">저장</button>
+        <button th:if="${board?.idx}" type="button" class="btn btn-info" id="update">수정</button>
+        <button th:if="${board?.idx}" type="button" class="btn btn-danger" id="delete">삭제</button>
+    </div>
+</div>
+
+<div th:replace="layout/footer::footer"></div>
+
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:if="!${board?.idx}">
+    $('#insert').click(function () {
+        var jsonData = JSON.stringify({
+            title: $('#board_title').val(),
+            subTitle: $('#board_sub_title').val(),
+            content: $('#board_content').val(),
+            boardType: $('#board_type option:selected').val()
+        });
+        $.ajax({
+            url: "http://localhost:8081/api/boards",
+            type: "POST",
+            data: jsonData,
+            contentType: "application/json",
+            headers: {
+                "Authorization": "Basic " + btoa("havi" + ":" + "test")
+            },
+            dataType: "json",
+            success: function () {
+                alert('저장 성공!');
+                location.href = '/board/list';
+            },
+            error: function () {
+                alert('저장 실패!');
+            }
+        });
+    });
+</script>
+<script th:if="${board?.idx}">
+    $('#update').click(function () {
+        var jsonData = JSON.stringify({
+            title: $('#board_title').val(),
+            subTitle: $('#board_sub_title').val(),
+            content: $('#board_content').val(),
+            boardType: $('#board_type option:selected').val(),
+            createdDate: $('#board_create_date').val()
+        });
+        $.ajax({
+            url: "http://localhost:8081/api/boards/" + $('#board_idx').val(),
+            type: "PUT",
+            data: jsonData,
+            contentType: "application/json",
+            dataType: "json",
+            success: function () {
+                alert('수정 성공!');
+                location.href = '/board/list';
+            },
+            error: function () {
+                alert('수정 실패!');
+            }
+        });
+    });
+    $('#delete').click(function () {
+        $.ajax({
+            url: "http://localhost:8081/api/boards/" + $('#board_idx').val(),
+            type: "DELETE",
+            success: function () {
+                alert('삭제 성공!');
+                location.href = '/board/list';
+            },
+            error: function () {
+                alert('삭제 실패!');
+            }
+        });
+    });
+</script>
+</body>
+</html>
+```
+<br>
+
+1. {...?}처럼 구문 뒤에 '?'를 붙여서 null체크 추가해 값이 null인 경우 빈 값이 출력되도록 함
+
+<img width="550" alt="스크린샷 2019-03-13 오전 1 02 26" src="https://user-images.githubusercontent.com/34764544/54216056-52b54600-452c-11e9-8c73-0bc5f8ca8649.png">
+<br>
+<br>
+<br>
+<br>
+
+### 4.4 마치며
+
+스프링 autoConfiguration 기능을 사용해서 설정을 최소화 할 수 있었음
+
+pageable 인터페이스를 사용해서 쉽게 페이징 데이터를 만들고 뷰로 넘겨주었음
