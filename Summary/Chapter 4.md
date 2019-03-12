@@ -50,7 +50,6 @@ Web, 타임리프, JPA, DevTools, 롬복, H2 라이브러리(인메모리 DB) �
 8. 페이징 처리하기
 9. 작성 폼 만들기
 <br>
-<br>
 
 ### 4.3.1 프로젝트 의존성 구성
 
@@ -108,7 +107,6 @@ dependencies {
 }
 ```
 <br>
-
 
 #### 디렉토리 구조
 
@@ -225,7 +223,6 @@ public class Board implements Serializable {
     }
 }
 ```
-<br>
 
 1. @GeneratedValue(strategy = GenerationType.IDENTITY)
 
@@ -247,7 +244,6 @@ public class Board implements Serializable {
 - DB에 저장될 때는 User 객체가 저장되는 것이 아니라 User의 PK인 user_idx 값이 저장됨
 
 - FetchType eager/lazy가 있음, 전자는 Board 도메인을 조회할 때 즉시 관련 User 객체를 함께 조회, 후자는 User 객체를 조회하는 시점이 아닌 객체가 실제로 사용될 때 조회
-<br>
 <br>
 
 #### User 클래스 생성
@@ -423,7 +419,6 @@ public class JpaMappingTest {
     }
 }
 ```
-<br>
 
 1. @RunWith : 정의된 클래스를 호출, JUnit의 확장 기능을 지정, 각 테스트 시 독립적인 애플리케이션 컨텍스트를 보장
 - IOC 객체를 빈 팩토리라 부르며, 빈 팩토리를 더 확장한 개념이 애플리케이션 컨텍스트
@@ -433,7 +428,6 @@ public class JpaMappingTest {
 3. @Before : 각 테스트가 실행되기 전 실행될 메서드 정의
 
 4. @Test : 실제 테스트가 진행될 메서드
-<br>
 <br>
 
 #### BoardService 클래스 생성
@@ -473,7 +467,6 @@ public class BoardService {
 
 3. board idx 값을 사용하여 board 객체 반환
 <br>
-<br>
 
 #### BoardController 클래스 생성
 
@@ -508,7 +501,6 @@ public class BoardController {
     }
 }
 ```
-<br>
 
 1. @RequestMapping("/board") : API URI 경로를 '/board'로 정의
 
@@ -573,7 +565,6 @@ public class SpringBootCommunityWebApplication {
     }
 }
 ```
-<br>
 
 1. @Bean : 애노테이션 메서드에 사용하면 CommandLineRunner를 빈으로 등록한 후 메서드 파라미터를 DI 시켜줌
 
@@ -585,14 +576,12 @@ public class SpringBootCommunityWebApplication {
 
 뷰를 구성하는데 다양한 서버 사이드 템플릿 엔진을 사용
 <br>
-<br>
 
 #### 서버 사이드 템플릿이란?
 
 미리 정의된 HTML에 데이터를 반영하여 뷰를 만드는 작업을 서버에서 진행하고 클라이언트에 전달하는 방식
 
 JSP, 타임리프, 프리마커, 무스타치, 그루비 템플릿 등이 서버 사이드 템플릿 엔진
-<br>
 <br>
 
 #### 리스트 뷰 페이지 작성
@@ -648,7 +637,6 @@ JSP, 타임리프, 프리마커, 무스타치, 그루비 템플릿 등이 서버
 </body>
 </html>
 ```
-<br>
 
 1. xmlns:th="http://www.thymeleaf.org" : th는 기존의 html을 효과적으로 대체하는 네임스페이스
 
@@ -709,7 +697,6 @@ tymeleaf-extras-java8time 의존성은 spring-boot-starter-thymeleaf 스타터�
         </ul>
 </nav>
 ```
-<br>
 
 1. th:with 구문 : ul 태그 안에서 사용할 변수 정의, startNumber와 endNumber 변수로 페이지의 처음과 끝을 동적으로 계산하여 초기화, 변수 계산 로직은 기본 10 페이지 단위
 
@@ -860,7 +847,6 @@ tymeleaf-extras-java8time 의존성은 spring-boot-starter-thymeleaf 스타터�
 </body>
 </html>
 ```
-<br>
 
 1. {...?}처럼 구문 뒤에 '?'를 붙여서 null체크 추가해 값이 null인 경우 빈 값이 출력되도록 함
 
