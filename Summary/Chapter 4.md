@@ -228,15 +228,24 @@ public class Board implements Serializable {
 }
 ```
 <br>
+
 1. @GeneratedValue(strategy = GenerationType.IDENTITY)
-: 기본 키가 자동으로 할당되도록 설정하는 어노테이션
-: 스프링 1.X에서는 IDENTITY 전략이 Default였지만, 2.X부터는 명시적으로 TABLE로 변경되어 명시적으로 적어줘야함
+
+- 기본 키가 자동으로 할당되도록 설정하는 어노테이션
+
+- 스프링 1.X에서는 IDENTITY 전략이 Default였지만, 2.X부터는 명시적으로 TABLE로 변경되어 명시적으로 적어줘야함
+<br>
 
 2. @Enumerated(EnumType.STRING)
-: Enum 타입 매핑용 어노테이션
-: 실제로 자바 enum 형이지만 데이터베이스의 String형으로 변환하여 저장
+
+- Enum 타입 매핑용 어노테이션
+
+- 실제로 자바 enum 형이지만 데이터베이스의 String형으로 변환하여 저장
+<br>
 
 3. @OneToOne(fetch=FetchType.Lazy)
-: 1:1 관계로 설정하는 어노테이션
-: DB에 저장될 때는 User 객체가 저장되는 것이 아니라 User의 PK인 user_idx 값이 저장됨
-: FetchType eager/lazy가 있음, 전자는 Board 도메인을 조회할 때 즉시 관련 User 객체를 함께 조회, 후자는 User 객체를 조회하는 시점이 아닌 객체가 실제로 사용될 때 조회
+- 1:1 관계로 설정하는 어노테이션
+
+- DB에 저장될 때는 User 객체가 저장되는 것이 아니라 User의 PK인 user_idx 값이 저장됨
+
+- FetchType eager/lazy가 있음, 전자는 Board 도메인을 조회할 때 즉시 관련 User 객체를 함께 조회, 후자는 User 객체를 조회하는 시점이 아닌 객체가 실제로 사용될 때 조회
