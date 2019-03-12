@@ -122,5 +122,121 @@ dependencies {
 - domain : Model 또는 DTO(Data Transfer Oject) 클래스
 - service : BO (Business Object) 클래스
 - repository : DAO (Data Access Object) 클래스
+<br>
 
 ### 4.3.2 스프링 부트 웹 스타터 살펴보기
+
+<img width="550" alt="스크린샷 2019-03-12 오후 10 39 22" src="https://user-images.githubusercontent.com/34764544/54204515-b5e8ad80-4517-11e9-874d-fe2fe2ecb809.png">
+<br>
+
+1. spring-boot-starter : 스프링 부트를 시작하는 기본적인 설정이 담겨있는 스타터
+
+2. spring-boot-starter-tomcat : 내장 톰캣을 사용하기 위한 스타터
+
+3. hibernate-validator : 어노테이션 기반의 표준화된 제약 조건 및 유효성 검사 규칙을 표현하는 라이브러리
+
+4. spring-boot-starter-json : jackson 라이브러리 지원 스타터
+
+5. spring-web : HTTPIntegration, Servlet filters, Spirng HTTP invoikder 및 HTTP 코어를 포함시킨 라이브러리
+
+6. spring-webmvc : request를 전달하는 MVC로 디자인된 DispatcherServlet 기반의 라이브러리
+<br>
+
+### 4.3.3 도메인 매핑하기
+
+도메인 매핑 : JPA를 사용하여 DB와 도메인 클래스를 연결시켜주는 작업
+<br>
+
+<img width="550" alt="스크린샷 2019-03-12 오후 10 46 09" src="https://user-images.githubusercontent.com/34764544/54204943-a9b12000-4518-11e9-8bf0-5b2335a0c31f.png">
+<br>
+
+#### BoardType Enum 생성
+
+```java
+public enum BoardType {
+    notice("공지사항"),
+    free("자유게시판");
+
+    private String value;
+
+    BoardType(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return this.value;
+    }
+}
+```
+<br>
+
+#### Board 클래스 생성
+
+```java
+import com.example.SpringBootCommunityWeb.domain.enums.BoardType;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+@Getter
+@NoArgsConstructor
+@Entity
+@Table
+public class Board implements Serializable {
+
+    @Id
+    @Column
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long idx;
+
+    @Column
+    private String title;
+
+    @Column
+    private String subTitle;
+
+    @Column
+    private String content;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private BoardType boardType;
+
+    @Column
+    private LocalDateTime createDate;
+
+    @Column
+    private LocalDateTime updateDate;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    private User user;
+
+    @Builder
+    public Board(String title, String subTitle, String content, BoardType boardType, LocalDateTime createDate, LocalDateTime updateDate, User user) {
+        this.title = title;
+        this.subTitle = subTitle;
+        this.content = content;
+        this.boardType = boardType;
+        this.createDate = createDate;
+        this.updateDate = updateDate;
+        this.user = user;
+    }
+}
+```
+<br>
+1. @GeneratedValue(strategy = GenerationType.IDENTITY)
+: 기본 키가 자동으로 할당되도록 설정하는 어노테이션
+: 스프링 1.X에서는 IDENTITY 전략이 Default였지만, 2.X부터는 명시적으로 TABLE로 변경되어 명시적으로 적어줘야함
+
+2. @Enumerated(EnumType.STRING)
+: Enum 타입 매핑용 어노테이션
+: 실제로 자바 enum 형이지만 데이터베이스의 String형으로 변환하여 저장
+
+3. @OneToOne(fetch=FetchType.Lazy)
+: 1:1 관계로 설정하는 어노테이션
+: DB에 저장될 때는 User 객체가 저장되는 것이 아니라 User의 PK인 user_idx 값이 저장됨
+: FetchType eager/lazy가 있음, 전자는 Board 도메인을 조회할 때 즉시 관련 User 객체를 함께 조회, 후자는 User 객체를 조회하는 시점이 아닌 객체가 실제로 사용될 때 조회
