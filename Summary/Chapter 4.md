@@ -585,12 +585,14 @@ public class SpringBootCommunityWebApplication {
 
 뷰를 구성하는데 다양한 서버 사이드 템플릿 엔진을 사용
 <br>
+<br>
 
 #### 서버 사이드 템플릿이란?
 
 미리 정의된 HTML에 데이터를 반영하여 뷰를 만드는 작업을 서버에서 진행하고 클라이언트에 전달하는 방식
 
 JSP, 타임리프, 프리마커, 무스타치, 그루비 템플릿 등이 서버 사이드 템플릿 엔진
+<br>
 <br>
 
 #### 리스트 뷰 페이지 작성
@@ -682,6 +684,7 @@ tymeleaf-extras-java8time 의존성은 spring-boot-starter-thymeleaf 스타터�
 
 - 맨 마지막 페이지로 이동 버튼
 <br>
+<br>
 
 #### 리스트 뷰 페이지 작성
 
@@ -713,6 +716,7 @@ tymeleaf-extras-java8time 의존성은 spring-boot-starter-thymeleaf 스타터�
 2. pagealbe 객체 : 해당 페이지가 처음인지(isFirst) 마지막인지(isLast)에 대한 데이터(불린형)를 제공, 이전/다음 페이지 미노출 여부 결정
 
 3. th:each 구문 : startNumber, endNumber까지 출력, pageable은 현재 페이지를 알려주는 number 객체가 0 부터 시작, 현재 페이지임을 보여주는 'activity' 프로퍼티를 추가
+<br>
 
 <img width="550" alt="스크린샷 2019-03-13 오전 1 02 43" src="https://user-images.githubusercontent.com/34764544/54215717-bee37a00-452b-11e9-8d19-e5483d5d5dad.png">
 <br>
