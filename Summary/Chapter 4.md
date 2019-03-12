@@ -256,14 +256,17 @@ public class Board implements Serializable {
 
 ```java
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+@Getter
+@NoArgsConstructor
+@Entity
+@Table
 public class User implements Serializable {
 
     @Id
@@ -434,3 +437,173 @@ public class JpaMappingTest {
 3. @Before : 각 테스트가 실행되기 전 실행될 메서드 정의
 
 4. @Test : 실제 테스트가 진행될 메서드
+<br>
+<br>
+
+#### BoardService 클래스 생성
+
+```java
+import com.example.SpringBootCommunityWeb.domain.Board;
+import com.example.SpringBootCommunityWeb.repository.BoardRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+@Service
+public class BoardService {
+
+    private final BoardRepository boardRepository;
+
+    public BoardService(BoardRepository boardRepository) {
+        this.boardRepository = boardRepository;
+    }
+
+    public Page<Board> findBoardList(Pageable pageable) {
+        pageable = PageRequest.of(pageable.getPageNumber() <= 0 ? 0 : pageable.getPageNumber() - 1, pageable.getPageSize());
+        return boardRepository.findAll(pageable);
+    }
+
+    public Board findBoardByIdx(Long idx) {
+        return boardRepository.findById(idx).orElse(new Board());
+    }
+}
+```
+<br>
+
+1. 서비스로 컴포넌트 정의
+
+2. pageable로 넘어온 pageNumber 객체가 0 이하일 때 0으로 초기화, 기본 페이지 크기인 10으로 새로운 pageReuest를 만들어 페이징 처리된 게시글 리스트 반환
+
+3. board idx 값을 사용하여 board 객체 반환
+<br>
+<br>
+
+#### BoardController 클래스 생성
+
+```java
+import com.example.SpringBootCommunityWeb.service.BoardService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+@Controller
+@RequestMapping("/board")
+public class BoardController {
+
+    @Autowired
+    BoardService boardService;
+
+    @GetMapping({"", "/"})
+    public String board(@RequestParam(value = "idx", defaultValue = "0") Long idx, Model model) {
+        model.addAttribute("board", boardService.findBoardByIdx(idx));
+        return "/board/form";
+    }
+
+    @GetMapping("/list")
+    public String list(@PageableDefault Pageable pageable, Model model) {
+        model.addAttribute("boardList", boardService.findBoardList(pageable));
+        return "/board/list";
+    }
+}
+```
+<br>
+
+1. @RequestMapping("/board") : API URI 경로를 '/board'로 정의
+
+2. @GetMapping({"", "/"}) : 매핑 경로를 중괄호를 사용해서 여러 개를 받을 수 있음
+
+3. @RequestParam(value = "idx", defaultValue = "0") : idx 파라미터를 필수로 받음, 만약 바인딩할 값이 없으면 디폴트 값
+
+4. @PageableDefault : size, sort, direction 등을 사용하여 페이징 처리에 대한 규약을 정의 가능
+
+5. return "/board/list" : src/resources/templates를 기준으로 데이터를 바인딩할 타깃의 뷰 경로를 지정
+<br>
+<br>
+<br>
+<br>
+
+### 4.3.5 CommandLineRunner를 사용하여 DB에 데이터 넣기
+CommandLineRunner : 애플리케이션 구동 후 특정 코드를 실행시키고 싶을 때 직접 구현하는 인터페이스
+<br>
+
+#### CommandLineRunner 인터페이스 추가
+
+```java
+import com.example.SpringBootCommunityWeb.domain.Board;
+import com.example.SpringBootCommunityWeb.domain.User;
+import com.example.SpringBootCommunityWeb.domain.enums.BoardType;
+import com.example.SpringBootCommunityWeb.repository.BoardRepository;
+import com.example.SpringBootCommunityWeb.repository.UserRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+
+import java.time.LocalDateTime;
+import java.util.stream.IntStream;
+
+@SpringBootApplication
+public class SpringBootCommunityWebApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringBootCommunityWebApplication.class, args);
+    }
+
+    @Bean
+    public CommandLineRunner runner(UserRepository userRepository, BoardRepository boardRepository) throws Exception {
+        return (args -> {
+            User user = userRepository.save(User.builder()
+                    .name("havi")
+                    .password("test")
+                    .email("havi@gmail.com")
+                    .createDate(LocalDateTime.now())
+                    .build());
+
+            IntStream.range(1, 200).forEach(index ->
+                    boardRepository.save(Board.builder()
+                            .title("게시글" + index)
+                            .subTitle("순서" + index)
+                            .content("콘텐츠")
+                            .boardType(BoardType.free)
+                            .createDate(LocalDateTime.now())
+                            .updateDate(LocalDateTime.now())
+                            .user(user)
+                            .build()));
+        });
+    }
+}
+```
+<br>
+
+1. @Bean : 애노테이션 메서드에 사용하면 CommandLineRunner를 빈으로 등록한 후 메서드 파라미터를 DI 시켜줌
+
+2. CommandLineRunner : 정의한 코드를 실행
+<br>
+<br>
+<br>
+<br>
+
+### 4.3.6 게시글 리스트 기능 만들기
+
+뷰를 구성하는데 다양한 서버 사이드 템플릿 엔진을 사용
+<br>
+
+#### 서버 사이드 템플릿이란?
+
+미리 정의된 HTML에 데이터를 반영하여 뷰를 만드는 작업을 서버에서 진행하고 클라이언트에 전달하는 방식
+
+JSP, 타임리프, 프리마커, 무스타치, 그루비 템플릿 등이 서버 사이드 템플릿 엔진
+<br>
+
+#### 리스트 뷰 페이지 작성
+
+```java
+
+```
+<br>
