@@ -237,7 +237,7 @@ public class Board implements Serializable {
 - 실제로 자바 enum 형이지만 데이터베이스의 String형으로 변환하여 저장
 
 - ordinary로 적용하면 타입이 사이에 추가가 되어버리면 의도치 않은 타입으로 저장될 수 있음
-참고 : http://woowabros.github.io/tools/2017/07/10/java-enum-uses.html
+http://woowabros.github.io/tools/2017/07/10/java-enum-uses.html
 <br>
 
 3. @OneToOne(fetch=FetchType.Lazy)
