@@ -97,6 +97,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 
 	// devtools
+	// https://haviyj.tistory.com/11 참고
 	runtime 'org.springframework.boot:spring-boot-devtools'
 
 	// h2 [런타임 시점에만 H2 사용하도록 설정]
