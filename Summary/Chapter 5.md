@@ -395,12 +395,21 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
     public UserArgumentResolver(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
-
+    
+    /**
+    * @SocialUser 어노테이션이 있고 타입이 User인 파라미터만 true를 반환
+    * true가 반환되면 resolveArgument메서드 실행
+    */
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.getParameterAnnotation(SocialUser.class) != null && parameter.getParameterType().equals(User.class);
     }
 
+	/**
+    * 검증이 완료된 파라미터 정보를 받음
+    * 이미 검증이 되어 세션에 해당 User 객체가 있으면 User 객체를 구성하는 로직을 태우지 않음
+    * 세션은 RequestContextHolder를 사용해서 가져올 수 있음
+    */
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
         HttpSession session = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getSession();
@@ -461,6 +470,12 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
 }
 ```
 <br>
+
+HandlerMethodArgumentResolver
+
+	1. supportsParameter() : 해당하는 파라미터를 지원할지 여부를 반환, true를 반환하면 resolveArgument 메서드가 수행
+
+	2. resolveArgument() : 파라미터의 인잣값에 대한 정보를 바탕으로 실제 객체를 생성하여 해당 파라미터 객체에 바인딩
 <br>
 
 #### UserArgumentResolver 등록하기
@@ -482,6 +497,7 @@ public class BootWebApplication extends WebMvcConfigurerAdapter {
 	}
 }
 ```
+WebMvcConfigurerAdapter 내부에 구현된 addArgumentResolvers를 overide하여 userArgumentResolver를 추가
 <br>
 <br>
 
