@@ -459,5 +459,116 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
         }
     }
 }
-
 ```
+<br>
+<br>
+
+#### UserArgumentResolver 등록하기
+/com/web/BootWebApplication.java
+```java
+@SpringBootApplication
+public class BootWebApplication extends WebMvcConfigurerAdapter {
+
+	@Autowired
+	private UserArgumentResolver userArgumentResolver;
+
+	public static void main(String[] args) {
+		SpringApplication.run(BootWebApplication.class, args);
+	}
+
+	@Override
+	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
+		argumentResolvers.add(userArgumentResolver);
+	}
+}
+```
+<br>
+<br>
+
+## 5.4.4 인증 동작 확인하기
+/resources/templates/login.html
+```java
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>login</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}" />
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+</head>
+<body>
+    <div th:replace="layout/header::header"></div>
+
+    <div class="container" style="text-align: center;">
+        <br/>
+        <h2>로그인</h2><br/><br/>
+        <a href="javascript:;" class="btn_social" data-social="facebook"><img th:src="@{/images/facebook.png}" width="40px" height="40px"/></a>
+        <a href="javascript:;" class="btn_social" data-social="google"><img th:src="@{/images/google.png}" width="40px" height="40px"/></a>
+        <a href="javascript:;" class="btn_social" data-social="kakao"><img th:src="@{/images/kakao.png}" width="40px" height="40px"/></a>
+    </div>
+
+    <div th:replace="layout/footer::footer"></div>
+
+    <script th:src="@{/js/jquery.min.js}"></script>
+    <script>
+        $('.btn_social').click(function () {
+            var socialType = $(this).data('social');
+            location.href="/login/"+socialType;
+        });
+    </script>
+
+</body>
+</html>
+```
+<br>
+<br>
+
+## 5.4.5 페이지 권한 분리하기
+/com/web/config/SecurityConfig.java
+```java
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    private OAuth2ClientContext oAuth2ClientContext;
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        CharacterEncodingFilter filter = new CharacterEncodingFilter();
+        http
+            .authorizeRequests()
+                .antMatchers("/", "/login/**",  "/css/**", "/images/**", "/js/**", "/console/**").permitAll()
+                .antMatchers("/facebook").hasAuthority(FACEBOOK.getRoleType())
+                .antMatchers("/google").hasAuthority(GOOGLE.getRoleType())
+                .antMatchers("/kakao").hasAuthority(KAKAO.getRoleType())
+                .anyRequest().authenticated()
+            .and()
+                .headers().frameOptions().disable()
+            .and()
+                .exceptionHandling()
+                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+            .and()
+                .formLogin()
+                .successForwardUrl("/board/list")
+            .and()
+                .logout()
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/")
+                .deleteCookies("JSESSIONID")
+                .invalidateHttpSession(true)
+            .and()
+                .addFilterBefore(filter, CsrfFilter.class)
+                .addFilterBefore(oauth2Filter(), BasicAuthenticationFilter.class)
+                .csrf().disable();
+    }
+    ...
+}
+```
+<br>
+
+antMatchers()
+
+: 각각의 소셜 미디어용 경로를 지정
+
+hasAuthority()
+
+: 메서드의 파라미터로 원하는 권한을 전달하여 해당 권한을 지닌 사용자만 경로를 사용할 수 있도록 통제
