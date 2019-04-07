@@ -588,7 +588,9 @@ antMatchers()
 hasAuthority()
 
 : 메서드의 파라미터로 원하는 권한을 전달하여 해당 권한을 지닌 사용자만 경로를 사용할 수 있도록 통제
-
+<br>
+<br>
+<br>
 
 # 스프링 부트 2.0 기반의 OAuth2 설정하기
 
@@ -742,6 +744,7 @@ public enum CustomOAuth2Provider {
 - 카카오 로그인 정보 등록
 <br>
 <br>
+<br>
 
 /resources/application.yml
 ```java
@@ -766,9 +769,9 @@ custom:
 
 - application.yml 파일에 ID와 Secret만 등록해주면 됨
 <br>
+<br>
 
-##### SecurityConfig.java 변경
-
+/com/web/config/SecurityConfig.java
 <img width="550" alt="스크린샷 2019-04-07 오후 9 06 43" src="https://user-images.githubusercontent.com/34764544/55683309-277e1500-5979-11e9-8aae-dc5afd43f5f3.png">
 
 <img width="550" alt="스크린샷 2019-04-07 오후 9 07 02" src="https://user-images.githubusercontent.com/34764544/55683315-3cf33f00-5979-11e9-8cba-db088ca99910.png">
