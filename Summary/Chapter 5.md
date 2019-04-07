@@ -588,3 +588,388 @@ antMatchers()
 hasAuthority()
 
 : 메서드의 파라미터로 원하는 권한을 전달하여 해당 권한을 지닌 사용자만 경로를 사용할 수 있도록 통제
+
+
+# 스프링 부트 2.0 기반의 OAuth2 설정하기
+
+## 5.5.1 스프링 부트 2.0 버전으로 의존성 업그레이드
+
+<img width="550" alt="스크린샷 2019-04-07 오후 8 20 35" src="https://user-images.githubusercontent.com/34764544/55682766-bb98ae00-5972-11e9-953d-9812266e478b.png">
+
+- 2.0에서는 더 이상 dependency-management 플러그인을 자동으로 지원하지 않음
+<br>
+
+<img width="550" alt="스크린샷 2019-04-07 오후 8 23 54" src="https://user-images.githubusercontent.com/34764544/55682801-1b8f5480-5973-11e9-8102-2b5af392815a.png">
+
+- 2.0버전 부터는 OAuth2 설정이 세분화 됨
+
+- JWT와 관련한 권한을 안전하게 전송하기 위한 프레임워크 JOSE가 추가되었음
+
+- JOSE는 JWT의 암호화/복호화 및 일정한 기능을 제공
+<br>
+
+
+## 5.5.2 스프링 부트 2.0 방식의 OAuth2 인증 재설정
+<br>
+
+스프링 부트 2.0 시큐리티 OAuth2의 스펙에는 여러 소셜 정보를 기본값으로 제공해주고 있음
+<br>
+
+/springframework/security/config/oauth2/client/CommonOAuth2Provider.java
+```java
+public enum CommonOAuth2Provider {
+
+	GOOGLE {
+
+		@Override
+		public Builder getBuilder(String registrationId) {
+			ClientRegistration.Builder builder = getBuilder(registrationId,
+					ClientAuthenticationMethod.BASIC, DEFAULT_LOGIN_REDIRECT_URL);
+			builder.scope("openid", "profile", "email");
+			builder.authorizationUri("https://accounts.google.com/o/oauth2/v2/auth");
+			builder.tokenUri("https://www.googleapis.com/oauth2/v4/token");
+			builder.jwkSetUri("https://www.googleapis.com/oauth2/v3/certs");
+			builder.userInfoUri("https://www.googleapis.com/oauth2/v3/userinfo");
+			builder.userNameAttributeName(IdTokenClaimNames.SUB);
+			builder.clientName("Google");
+			return builder;
+		}
+	},
+
+	GITHUB {
+
+		@Override
+		public Builder getBuilder(String registrationId) {
+			ClientRegistration.Builder builder = getBuilder(registrationId,
+					ClientAuthenticationMethod.BASIC, DEFAULT_LOGIN_REDIRECT_URL);
+			builder.scope("read:user");
+			builder.authorizationUri("https://github.com/login/oauth/authorize");
+			builder.tokenUri("https://github.com/login/oauth/access_token");
+			builder.userInfoUri("https://api.github.com/user");
+			builder.userNameAttributeName("id");
+			builder.clientName("GitHub");
+			return builder;
+		}
+	},
+
+	FACEBOOK {
+
+		@Override
+		public Builder getBuilder(String registrationId) {
+			ClientRegistration.Builder builder = getBuilder(registrationId,
+					ClientAuthenticationMethod.POST, DEFAULT_LOGIN_REDIRECT_URL);
+			builder.scope("public_profile", "email");
+			builder.authorizationUri("https://www.facebook.com/v2.8/dialog/oauth");
+			builder.tokenUri("https://graph.facebook.com/v2.8/oauth/access_token");
+			builder.userInfoUri("https://graph.facebook.com/me");
+			builder.userNameAttributeName("id");
+			builder.clientName("Facebook");
+			return builder;
+		}
+	},
+
+	OKTA {
+
+		@Override
+		public Builder getBuilder(String registrationId) {
+			ClientRegistration.Builder builder = getBuilder(registrationId,
+					ClientAuthenticationMethod.BASIC, DEFAULT_LOGIN_REDIRECT_URL);
+			builder.scope("openid", "profile", "email", "address", "phone");
+			builder.userNameAttributeName(IdTokenClaimNames.SUB);
+			builder.clientName("Okta");
+			return builder;
+		}
+	};
+
+	private static final String DEFAULT_LOGIN_REDIRECT_URL = "{baseUrl}/login/oauth2/code/{registrationId}";
+
+	protected final ClientRegistration.Builder getBuilder(String registrationId,
+															ClientAuthenticationMethod method, String redirectUri) {
+		ClientRegistration.Builder builder = ClientRegistration.withRegistrationId(registrationId);
+		builder.clientAuthenticationMethod(method);
+		builder.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE);
+		builder.redirectUriTemplate(redirectUri);
+		return builder;
+	}
+
+	/**
+	 * Create a new
+	 * {@link org.springframework.security.oauth2.client.registration.ClientRegistration.Builder
+	 * ClientRegistration.Builder} pre-configured with provider defaults.
+	 * @param registrationId the registration-id used with the new builder
+	 * @return a builder instance
+	 */
+	public abstract ClientRegistration.Builder getBuilder(String registrationId);
+}
+```
+<br>
+<br>
+
+
+/com/web/oauth2/CustomOAuth2Provider.java (카카오 정보를 담은 객체 생성)
+```java
+public enum CustomOAuth2Provider {
+
+    KAKAO {
+        @Override
+        public ClientRegistration.Builder getBuilder(String registrationId) {
+            ClientRegistration.Builder builder = getBuilder(registrationId, ClientAuthenticationMethod.POST, DEFAULT_LOGIN_REDIRECT_URL);
+            builder.scope("profile");
+            builder.authorizationUri("https://kauth.kakao.com/oauth/authorize");
+            builder.tokenUri("https://kauth.kakao.com/oauth/token");
+            builder.userInfoUri("https://kapi.kakao.com/v1/user/me");
+            builder.userNameAttributeName("id");
+            builder.clientName("Kakao");
+            return builder;
+        }
+    };
+
+    private static final String DEFAULT_LOGIN_REDIRECT_URL = "{baseUrl}/login/oauth2/code/{registrationId}";
+
+    protected final ClientRegistration.Builder getBuilder(String registrationId, ClientAuthenticationMethod method, String redirectUri) {
+        ClientRegistration.Builder builder = ClientRegistration.withRegistrationId(registrationId);
+        builder.clientAuthenticationMethod(method);
+        builder.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE);
+        builder.redirectUriTemplate(redirectUri);
+        return builder;
+    }
+
+    public abstract ClientRegistration.Builder getBuilder(String registrationId);
+
+}
+```
+<br>
+- 카카오 로그인 정보 등록
+<br>
+<br>
+
+/resources/application.yml
+```java
+security:
+    oauth2:
+        client:
+            registration:
+                google:
+                    client-id:
+                    client-secret:
+                facebook:
+                    client-id:
+                    client-secret:
+custom:
+    oauth2:
+        kakao:
+            client-id:
+```
+<br>
+
+- 기본으로 등록되어 있는 정보를 수정하고 싶다면 프로퍼티에 새로 등록하는 방법으로 오버라이드하여 변경할 수 있음
+
+- application.yml 파일에 ID와 Secret만 등록해주면 됨
+<br>
+
+##### SecurityConfig.java 변경
+
+<img width="550" alt="스크린샷 2019-04-07 오후 9 06 43" src="https://user-images.githubusercontent.com/34764544/55683309-277e1500-5979-11e9-8aae-dc5afd43f5f3.png">
+
+<img width="550" alt="스크린샷 2019-04-07 오후 9 07 02" src="https://user-images.githubusercontent.com/34764544/55683315-3cf33f00-5979-11e9-8cba-db088ca99910.png">
+
+<img width="550" alt="스크린샷 2019-04-07 오후 9 07 07" src="https://user-images.githubusercontent.com/34764544/55683330-54322c80-5979-11e9-85f2-f83f74179845.png">
+
+- 1.5 버전에서 작성한 OAuth2 관련 설정을 모두 삭제
+
+- ouath2Login()만 추가로 설정하면 기본적으로 제공되는 구글과 페이스북에 대한 OAuth2 인증 방식이 적용됨
+<br>
+<br>
+
+/com/web/config/SecurityConfig.java
+```java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        CharacterEncodingFilter filter = new CharacterEncodingFilter();
+        http
+            .authorizeRequests()
+                .antMatchers("/", "/oauth2/**", "/login/**",  "/css/**", "/images/**", "/js/**", "/console/**").permitAll()
+                .antMatchers("/facebook").hasAuthority(FACEBOOK.getRoleType())
+                .antMatchers("/google").hasAuthority(GOOGLE.getRoleType())
+                .antMatchers("/kakao").hasAuthority(KAKAO.getRoleType())
+                .anyRequest().authenticated()
+            .and()
+                .oauth2Login()
+                .defaultSuccessUrl("/loginSuccess")
+                .failureUrl("/loginFailure")
+            .and()
+                .headers().frameOptions().disable()
+            .and()
+                .exceptionHandling()
+                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+            .and()
+                .formLogin()
+                .successForwardUrl("/board/list")
+            .and()
+                .logout()
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/")
+                .deleteCookies("JSESSIONID")
+                .invalidateHttpSession(true)
+            .and()
+                .addFilterBefore(filter, CsrfFilter.class)
+                .csrf().disable();
+    }
+    
+    /**
+    * OAuth2ClientProerties와 설정했던 카카오 클라이언트 ID를 불러옴
+    * @Configuration으로 등록되어 있는 클래스에서 @Bean으로 등록된 메서드의 파라미터로 지정된 객체들은 Autowiring 가능
+    * OAuth2ClientProperties에는 구글과 페이스북의 정보가 들어 있고, 카카오는 따로 등록했기 때문에 @Value로 수동으로 불러옴
+    */
+    @Bean
+    public ClientRegistrationRepository clientRegistrationRepository(OAuth2ClientProperties oAuth2ClientProperties, @Value("${custom.oauth2.kakao.client-id}") String kakaoClientId) {
+        List<ClientRegistration> registrations = oAuth2ClientProperties.getRegistration().keySet().stream()
+                .map(client -> getRegistration(oAuth2ClientProperties, client))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        registrations.add(CustomOAuth2Provider.KAKAO.getBuilder("kakao")
+                .clientId(kakaoClientId)
+                .clientSecret("test") //필요없는 값인데 null이면 실행이 안되도록 설정되어 있음
+                .jwkSetUri("test") //필요없는 값인데 null이면 실행이 안되도록 설정되어 있음
+                .build());
+
+        return new InMemoryClientRegistrationRepository(registrations);
+    }
+    
+    /**
+    * getRegistration() 메서드를 통해 구글과 페이스북 인증 정보를 빌드
+    * registrations 리스트에 카카오 인증 정보를 추가
+    * 실제 요청시 사용하는 정보는 클라이언트 ID뿐이지만 clientSecret()과 jwtSetUri()가 null이면 안되므로 값을 넣음
+    * 페이스북의 그래프 API의 경우 scope()로는 필요한 필드를 반환해주기 않기 때문에 직접 id, name, email, link 등을 파리미터로 넣어 요청하도록 설정
+    */
+    private ClientRegistration getRegistration(OAuth2ClientProperties clientProperties, String client) {
+        if ("google".equals(client)) {
+            OAuth2ClientProperties.Registration registration = clientProperties.getRegistration().get("google");
+            return CommonOAuth2Provider.GOOGLE.getBuilder(client)
+                    .clientId(registration.getClientId())
+                    .clientSecret(registration.getClientSecret())
+                    .scope("email", "profile")
+                    .build();
+        }
+        if ("facebook".equals(client)) {
+            OAuth2ClientProperties.Registration registration = clientProperties.getRegistration().get("facebook");
+            return CommonOAuth2Provider.FACEBOOK.getBuilder(client)
+                    .clientId(registration.getClientId())
+                    .clientSecret(registration.getClientSecret())
+                    .userInfoUri("https://graph.facebook.com/me?fields=id,name,email,link")
+                    .scope("email")
+                    .build();
+        }
+        return null;
+    }
+}
+```
+<br>
+<br>
+
+/com/web/controller/LoginController.java
+```java
+@Controller
+public class LoginController {
+
+    @GetMapping("/login")
+    public String login() {
+        return "login";
+    }
+
+    @GetMapping("/loginSuccess")
+    public String loginComplete() {
+        return "redirect:/board/list";
+    }
+}
+```
+<br>
+<br>
+
+
+/com/web/resolver/UserArgumentResolver.java
+```java
+@Component
+public class UserArgumentResolver implements HandlerMethodArgumentResolver {
+
+    private UserRepository userRepository;
+
+    public UserArgumentResolver(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public boolean supportsParameter(MethodParameter parameter) {
+        return parameter.getParameterAnnotation(SocialUser.class) != null && parameter.getParameterType().equals(User.class);
+    }
+
+    @Override
+    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
+        HttpSession session = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getSession();
+        User user = (User) session.getAttribute("user");
+        return getUser(user, session);
+    }
+
+	/**
+    * 2.0 버전에서는 액세스 토큰까지 제공한다는 의미로 OAuth2Authentication이 아닌 OAuth2AuthenticationToken을 지원
+    * SecurityContextHolder에서 OAuth2AuthenticationToken을 가져옴
+    */
+    private User getUser(User user, HttpSession session) {
+        if(user == null) {
+            try {
+                OAuth2AuthenticationToken authentication = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+                Map<String, Object> map = authentication.getPrincipal().getAttributes();
+                User convertUser = convertUser(authentication.getAuthorizedClientRegistrationId(), map);
+
+                user = userRepository.findByEmail(convertUser.getEmail());
+                if (user == null) { user = userRepository.save(convertUser); }
+
+                setRoleIfNotSame(user, authentication, map);
+                session.setAttribute("user", user);
+            } catch (ClassCastException e) {
+                return user;
+            }
+        }
+        return user;
+    }
+
+    private User convertUser(String authority, Map<String, Object> map) {
+        if(FACEBOOK.isEquals(authority)) return getModernUser(FACEBOOK, map);
+        else if(GOOGLE.isEquals(authority)) return getModernUser(GOOGLE, map);
+        else if(KAKAO.isEquals(authority)) return getKaKaoUser(map);
+        return null;
+    }
+
+    private User getModernUser(SocialType socialType, Map<String, Object> map) {
+        return User.builder()
+                .name(String.valueOf(map.get("name")))
+                .email(String.valueOf(map.get("email")))
+                .pincipal(String.valueOf(map.get("id")))
+                .socialType(socialType)
+                .createdDate(LocalDateTime.now())
+                .build();
+    }
+
+    private User getKaKaoUser(Map<String, Object> map) {
+        Map<String, String> propertyMap = (HashMap<String, String>) map.get("properties");
+        return User.builder()
+                .name(propertyMap.get("nickname"))
+                .email(String.valueOf(map.get("kaccount_email")))
+                .pincipal(String.valueOf(map.get("id")))
+                .socialType(KAKAO)
+                .createdDate(LocalDateTime.now())
+                .build();
+    }
+
+    private void setRoleIfNotSame(User user, OAuth2AuthenticationToken authentication, Map<String, Object> map) {
+        if(!authentication.getAuthorities().contains(new SimpleGrantedAuthority(user.getSocialType().getRoleType()))) {
+            SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(map, "N/A", AuthorityUtils.createAuthorityList(user.getSocialType().getRoleType())));
+        }
+    }
+}
+```
