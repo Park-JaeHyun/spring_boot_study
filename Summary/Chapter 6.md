@@ -335,3 +335,433 @@ public class RestWebApplication {
 	}
 }
 ```
+<br>
+<br>
+
+## 6.4 스프링 부트 데이터 레스트로 REST API 구현하기
+
+MVC 패턴
+- 컨트롤러와 서비스 영역을 두면 세부적인 처리가 가능하고 복잡한 서비스도 처리할 수 있음
+
+- But 복잡한 로직 없이 단순 요청을 받아 데이터를 있는 그대로 반환할 때는 비용 낭비가 됨!
+</br>
+
+데이터 레스트
+- MVC 패턴에서 VC를 생략
+
+- 복잡한 로직 없이 단순 요청을 반아 데이터를 반환할 때 좋음
+
+- Domain, Repository로만 Rest Api를 제공하기 때문에 빠르고 쉽게 프로젝트 진
+</br>
+</br>
+
+#### 6.4.1 준비하기
+/data-rest/src/main/resources/application.yml
+```java
+spring:
+  datasource:
+    url: jdbc:mysql://172.16.135.15:3306/autoconfiguration
+    username: mns
+    password: dltmxmdlsxjspt
+    driver-class-name: com.mysql.jdbc.Driver
+  data:
+    rest:
+      // API의 모든 요청의 기본 경로를 지정
+      base-path: /api
+      // 클라이언트가 따로 페이지 크기를 요청하지 않았을 때 적용할 기본 페이지 크기
+      default-page-size: 10
+      // 최대 페이지 수를 지정
+      max-page-size: 10
+server:
+  port: 8081
+```
+</br>
+
+##### 스프링 부트 데이터 레스트 프로퍼티
+- page-param-name
+페이지를 선택하는 쿼리 파라미터명을 변경
+
+- limit-param-name
+페이지 아이템 수를 나타내는 쿼리 파라미터명을 변경
+
+- sort-param-name
+페이지의 정렬값을 나타내는 쿼리 파라미터명을 변경
+
+- default-media-type
+미디어 타입을 지정하지 않았을 때 사용할 기본 미디어 타입
+
+- return-body-on-update
+엔티티를 수정한 이후응답 바디 반환 여부를 설정
+
+- enable-enum-translation
+'rest-message'라는 프로퍼티 파일을 만들어서 지정한 enum 값을 사용하게 해줌
+
+- detection-strategy
+리포지토리 노출 전략을 설정하는 프로퍼티
+ALL : 모든 유형의 리포지토리를 노출
+DEFAULT : pulbic으로 설정된 모든 리포지토리를 노출
+ANNOTATION : @RestResouce가 설정된 리포지토리만 노출
+VISIBILITY : public으로 설정된 인터페이스만 노출
+
+</br>
+
+
+#### 6.4.3 스프링 부트 데이터 레스트로 REST API 구현하기
+
+@RepositoryRestResource
+- 스프링 부트 데이터 레스트에서 지원하는 어노테이션
+
+- 별도의 컨트롤러와 서비스 영역 없이 미리 내부적으로 정의
+<br>
+
+/data-rest/src/main/java/com/commnunity/rest/repository/BoardRepository.java
+```java
+@RepositoryRestResource
+public interface BoardRepository extends JpaRepository<Board, Long> {
+}
+```
+<br>
+
+/data-rest/src/main/java/com/commnunity/rest/repository/UserRepository.java
+```java
+@RepositoryRestResource
+public interface UserRepository extends JpaRepository<Board, Long> {
+}
+```
+<br>
+프로퍼티를 설정 후 도메인, 레포지토리만 구현하면 다른 영역은 스프링 부트 데이터 레스트가 알아서 처리해줌
+<br>
+
+##### 테스트
+- $ curl http://localhost:8081/api/boards
+
+<img width="550" alt="스크린샷 2019-05-01 오후 6 15 51" src="https://user-images.githubusercontent.com/34764544/57011588-59fbf480-6c3d-11e9-91d9-918000c4a92b.png">
+
+<img width="550" alt="스크린샷 2019-05-01 오후 6 16 11" src="https://user-images.githubusercontent.com/34764544/57011621-90397400-6c3d-11e9-87bb-3f6f5f95557d.png">
+
+<br>
+내부 "_links" : 해당 Board와 관련된 링크 정보를 포함
+외부 "_links" : Board의 페이징 처리와 관련된 링크 정보를 포함
+
+MVC 패턴을 활용한 방법보다 더 많은 링크 정보를 제공
+
+이러한 정보는 key:value 형식으로 구성되어 있음
+=> 클라이언트가 키를 참조하도록 코드를 설정한다면 서버엣 요청된 데이터의 정보가 바뀌더라도 클라이언트 입장에서 코드를 수정할 필요가 없음
+</br>
+
+#### 6.4.4 @RepositoryRestController를 사용하여 REST API 구현하기
+
+모든 사람이 위와 같은 데이터형을 원하지는 않음
+- @RepositoryRestController를 사용하면 좋음
+</br>
+
+두 가지 주의사항
+- 매핑하는 URL 형식이 스프링 부트 데이터 레스트에서 정의하는 REST API 형식에 맞아야 함
+
+- 기존에 기본으로 제공하는 URL 형식과 같게 제공해야 해당 컨트롤러의 메서드가 기존의 기본 API를 오버라이드 함
+</br>
+
+```java
+@RepositoryRestController
+public class BoardRestController {
+
+    private BoardRepository boardRepository;
+
+    public BoardRestController(BoardRepository boardRepository) {
+        this.boardRepository = boardRepository;
+    }
+
+	// 스프링 부트 데이터 레스트에서 기본적으로 제공해주는 URL 형식을 오버라이드
+    @GetMapping("/boards")
+    public @ResponseBody Resources<Board> simpleBoard(@PageableDefault Pageable pageable) {
+        Page<Board> boardList = boardRepository.findAll(pageable);
+		// 전체 페이지 수, 현재 페이지 번호, 총 게시판 수 등의 페이지 정보를 담는 PageMetadata 객체를 생성
+        PageMetadata pageMetadata = new PageMetadata(pageable.getPageSize(), boardList.getNumber(), boardList.getTotalElements());
+        // 컬렉션의 페이지 리소스 정보를 추가적으로 제공해주는 PagedResource 객체를 만들어 반환값으로 사용
+        PagedResources<Board> resources = new PagedResources<>(boardList.getContent(), pageMetadata);
+// 필요한 링크 추가        resources.add(linkTo(methodOn(BoardRestController.class).simpleBoard(pageable)).withSelfRel());
+        return resources;
+    }
+}
+```
+</br>
+
+##### 테스트
+- $ curl http://localhost:8081/api/boards
+
+<img width="550" alt="스크린샷 2019-05-01 오후 6 33 32" src="https://user-images.githubusercontent.com/34764544/57012078-a5170700-6c3f-11e9-90c0-0a43553cd204.png">
+
+ 스프링 부트 데이터 레스트에서 제공해주는 기본 URL은 @RepositoryRestContorller를 사용하여 오버라이드 가능
+<br>
+<br>
+
+#### 6.4.6 프로젝션으로 노출 필드 제한하기
+
+스프링 부트 데이터 레스트는 반환값을 제어하는 3가지 방법을 제공
+
+- @JsonIgnore 추가
+
+- @Projection 사용
+
+- 프로젝션을 수동으로 등록
+<br>
+
+1. @JsonIgnore로 필드 반환값에서 제거
+```java
+@Column
+@JsonIgnore
+private String password;
+```
+<br>
+
+2. @Projection로 필드 반환값에서 제거
+프로젝션 인터페이스 생성 시 반드시 해당 도메인 클래스와 같은 패키지 경로 또는 하위 패키지 경로에 생성해야 함
+```java
+@Projection(name = "getOnlyName", types = {User.class})
+	public interface UserOnlyContainName {
+	String getName();
+}
+```
+```java
+@RepositoryRestResource(excerptProjection = UserOnlyContainName.class)
+public interface UserRepository extends JpaRepository<User, Long> {
+}
+```
+<br>
+
+##### 테스트
+ $ curl http://localhost:8081/api/boards
+<img width="550" alt="스크린샷 2019-05-01 오후 6 46 09" src="https://user-images.githubusercontent.com/34764544/57012433-684c0f80-6c41-11e9-9adf-889b8f961c54.png">
+<br>
+
+3. 수동으로 프로젝션을 등록
+수동 등록 시에는 반드시 프로젝션 타깃이 될 도메인과 동일하거나 하위에 있는 패키지 경로로 들어가야 함
+```java
+	@Configuration
+	public class CustomizedRestMvcConfiguration extends RepositoryRestConfigurerAdapter {
+
+	@Override
+	public void confiugreRepositoryRestConfiguration(RepositoryRestConfiguration config) {
+	config.getProjectionConfiguration().addProjection(UserOnlyContainName.class);
+	}
+}
+```
+<br>
+
+#### 6.4.7 각 메서드 권한 제한
+
+사용자에 따라 다른 권한을 부여해야 함
+
+스프링 부트 데이터 레스트 프로젝트는 스프링 시큐리티와의 호환을 통해 이 문제를 해결
+
+@Secured, @PreAuthorize를 사용
+
+- @Secured : 순수하게 롤 기반으로 접근을 제한
+
+- @PreAuthorize : @Secured보다 더 효율적으로 권한 지정을 할 수 있음
+<br>
+
+ROLE_ADMIN 권한을 갖고 있어야만 Board를 저장할 수 있는 예제
+```java
+@Projection(name = "getOnlyTitle", types = { Board.class })
+public interface BoardOnlyContainTitle {
+
+    String getTitle();
+}
+```
+
+```java
+@RepositoryRestResource(excerptProjection = BoardOnlyContainTitle.class)
+public interface BoardRepository extends JpaRepository<Board, Long> {
+
+	// ROLE_ADMIN 권한을 가진 사용자만 Board를 저장할 수 있음
+    @Override
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    <S extends Board> S save(S entity);
+}
+```
+<br>
+<br>
+
+#### 6.4.8 이벤트 바인딩
+
+스프링 부트 데이터 레스트에서는 여러 메서드의 이벤트 발생 시점을 가로채서 원하는 데이터를 추가하거나 검사하는 이벤트 어노테이션을 제공
+
+##### 이벤트 어노테이션
+- BeforeCreateEvent
+생성하기 전의 이벤트
+
+- AfterCreateEvent
+생성한 후의 이벤트
+
+- BeforeSaveEvent
+수정하기 전의 이벤트
+
+- AfterSaveEvent
+수정한 후의 이벤트
+
+- BeforeDeleteEvent
+삭제하기 전의 이벤트
+
+- AfterDeleteEvent
+삭제한 후의 이벤트
+
+- BeforeLinkSaveEvent
+관계를 가진 (1:1, M:M) 링크를 수정하기 전의 이벤트
+
+- AfterLinkSaveEvent
+관계를 가진 (1:1, M:M) 링크를 수정한 후의 이벤트
+
+- BeforeLinkDeleteEvent
+관계를 가진 (1:1, M:M) 링크를 삭제하기 전의 이벤트
+
+- AfterLinkDeleteEvent
+관계를 가진 (1:1, M:M) 링크를 삭제한 후의 이벤트
+<br>
+
+각 이벤트는 @Hanlde + 이벤트명 형태로 지원
+<br>
+
+
+게시글 생성 시 생성한 날짜와 수정한 날짜를 서버에서 설정하도록 하는 BoardEventHandler라는 클래스를 생성
+```java
+@RepositoryEventHandler
+public class BoardEventHandler {
+
+	// 게시글의 생성 날짜를 현재 시간으로 할당
+    @HandleBeforeCreate
+    public void beforeCreateBoard(Board board) {
+        board.setCreatedDateNow();
+    }
+
+	// 게시글 수정 시 수정 날짜를 현재 시간으로 할당
+    @HandleBeforeSave
+    public void beforeSaveBoard(Board board) {
+        board.setUpdatedDateNow();
+    }
+}
+```
+<br>
+
+선언한 이벤트를 어떻게 적용?
+
+1. 수동으로 이벤트를 적용하는 ApplicationListener를 사용하는 방법
+-> AbstractRepositoryEventListsener를 상속받고 관련 메서드를 오버라이드하여 원하는 이벤트만 등록할 수 있음
+
+2. 어노테이션을 기반으로 하는 이벤트 처리 방법
+-> 생성한 이벤트 핸들러 클래스에는 @RepositoryEventHandler 어노테이션이 선언되어 있어야 함
+-> 이벤트 핸들러를 등록하려면 @Component를 사용하거나 직접 ApplicationContext에 빈으로 등록해야 함
+<br>
+
+DtataRestApplication 클래스에 직접 빈으로 등록
+```java
+@SpringBootApplication
+public class DataRestApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(DataRestApplication.class, args);
+	}
+
+	@Bean
+	BoardEventHandler boardEventHandler() {
+		return new BoardEventHandler();
+	}
+```
+<br>
+
+##### 테스트
+```java
+@RunWith(SpringRunner.class)
+// 스프링 부트 데이터 레스트를 테스트하기 위해 시큐리티 설정이 들어 있는 DataRestApplication 클래스 주입, 포트도 정의되어 있는 8081을 동일하게 사용하기 위해 DEFINED_PORT로 지정하여 사용
+@SpringBootTest(classes = DataRestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+
+// @AutoConfigureTestDatabase : H2가 build.gradle의 클래스 경로에 포함되어 있으면 H2를 테스트 데이터 베이스로 지정, 만약 이 어노테이션을 사용하지 않는다면 테스트 Board를 저장할 때마다 실제 데이터베이스에 반영
+@AutoConfigureTestDatabase
+public class BoardEventTest {
+
+	// TestRestTemplate : RestTemplate을 래핑한 객체로서 GET, POST, PUT, DELETE와 같은 HttpRequest를 편하게 테스트하도록 도와줌
+    private TestRestTemplate testRestTemplate = new TestRestTemplate("havi", "test");
+
+	// 테스트
+    @Test
+    public void 저장할때_이벤트가_적용되어_생성날짜가_생성되는가() {
+        Board createdBoard = createBoard();
+        assertNotNull(createdBoard.getCreatedDate());
+    }
+
+	// 테스트
+    @Test
+    public void 수정할때_이벤트가_적용되어_수정날짜가_생성되는가() {
+        Board createdBoard = createBoard();
+        Board updatedBoard = updateBoard(createdBoard);
+        assertNotNull(updatedBoard.getUpdatedDate());
+    }
+
+    private Board createBoard() {
+        Board board = Board.builder().title("저장 이벤트 테스트").build();
+        return testRestTemplate.postForObject("http://127.0.0.1:8081/api/boards", board, Board.class);
+    }
+
+    private Board updateBoard(Board createdBoard) {
+        String updateUri = "http://127.0.0.1:8081/api/boards/1";
+        testRestTemplate.put(updateUri, createdBoard);
+        return testRestTemplate.getForObject(updateUri, Board.class);
+    }
+}
+```
+<br>
+
+#### 6.4.9 URI 처리
+
+basePath만 설정하면 게시판의 기본 접속 URI는 아래와 같음
+http://localhost:8081/api/boards
+
+URI로 요청하는 모든 검색 쿼리 메서드는 search 하위로 표현됨
+다음과 같은 기본 설정 URI를 갖고 있음
+http://localhost:8081/api/boards/search
+<br>
+
+제목을 찾는 쿼리 메서드 생성
+```java
+@RepositoryRestResource(excerptProjection = BoardOnlyContainTitle.class)
+public interface BoardRepository extends JpaRepository<Board, Long> {
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    <S extends Board> S save(S entity);
+
+    @RestResource
+    List<Board> findByTitle(@Param("title") String title);
+}
+```
+
+추가된 제목을 찾는 쿼리를 호출하는 URI를 다음과 같이 표현
+
+http://localhost:8081/api/boards/search/findByTitle?title=게시글1
+
+@RestResource의 path를 설정하지 않으면 기본값에 해당 메서드명이 적용됨
+
+다음과 같이 'query'로 값을 변경하여 path 값을 다르게 줄 수 있음
+```java
+@RepositoryRestResource(excerptProjection = BoardOnlyContainTitle.class)
+public interface BoardRepository extends JpaRepository<Board, Long> {
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    <S extends Board> S save(S entity);
+
+    @RestResource(path = "query")
+    List<Board> findByTitle(@Param("title") String title);
+}
+```
+
+http://localhost:8081/api/boards/search/query?title=게시글1
+<br>
+<br>
+
+특정 리포지토리, 쿼리 메서드, 필드를 노출하고 싶지 않은 상황에는?
+
+```java
+@RepositoryRestResource(exported = false)
+@RestResource(exported = false)
+```
