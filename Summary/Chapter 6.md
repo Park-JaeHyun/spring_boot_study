@@ -470,16 +470,17 @@ public class BoardRestController {
     public BoardRestController(BoardRepository boardRepository) {
         this.boardRepository = boardRepository;
     }
-
-	// 스프링 부트 데이터 레스트에서 기본적으로 제공해주는 URL 형식을 오버라이드
+    
+    // 스프링 부트 데이터 레스트에서 기본적으로 제공해주는 URL 형식을 오버라이드
     @GetMapping("/boards")
     public @ResponseBody Resources<Board> simpleBoard(@PageableDefault Pageable pageable) {
         Page<Board> boardList = boardRepository.findAll(pageable);
-		// 전체 페이지 수, 현재 페이지 번호, 총 게시판 수 등의 페이지 정보를 담는 PageMetadata 객체를 생성
+	// 전체 페이지 수, 현재 페이지 번호, 총 게시판 수 등의 페이지 정보를 담는 PageMetadata 객체를 생성
         PageMetadata pageMetadata = new PageMetadata(pageable.getPageSize(), boardList.getNumber(), boardList.getTotalElements());
-        // 컬렉션의 페이지 리소스 정보를 추가적으로 제공해주는 PagedResource 객체를 만들어 반환값으로 사용
+    	// 컬렉션의 페이지 리소스 정보를 추가적으로 제공해주는 PagedResource 객체를 만들어 반환값으로 사용
         PagedResources<Board> resources = new PagedResources<>(boardList.getContent(), pageMetadata);
-// 필요한 링크 추가        resources.add(linkTo(methodOn(BoardRestController.class).simpleBoard(pageable)).withSelfRel());
+	// 필요한 링크 추가
+	resources.add(linkTo(methodOn(BoardRestController.class).simpleBoard(pageable)).withSelfRel());
         return resources;
     }
 }
@@ -531,19 +532,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 ##### 테스트
  $ curl http://localhost:8081/api/boards
+ 
 <img width="550" alt="스크린샷 2019-05-01 오후 6 46 09" src="https://user-images.githubusercontent.com/34764544/57012433-684c0f80-6c41-11e9-9adf-889b8f961c54.png">
 <br>
 
 3. 수동으로 프로젝션을 등록
 수동 등록 시에는 반드시 프로젝션 타깃이 될 도메인과 동일하거나 하위에 있는 패키지 경로로 들어가야 함
 ```java
-	@Configuration
-	public class CustomizedRestMvcConfiguration extends RepositoryRestConfigurerAdapter {
+@Configuration
+public class CustomizedRestMvcConfiguration extends RepositoryRestConfigurerAdapter {
 
-	@Override
-	public void confiugreRepositoryRestConfiguration(RepositoryRestConfiguration config) {
-	config.getProjectionConfiguration().addProjection(UserOnlyContainName.class);
-	}
+@Override
+public void confiugreRepositoryRestConfiguration(RepositoryRestConfiguration config) {
+config.getProjectionConfiguration().addProjection(UserOnlyContainName.class);
 }
 ```
 <br>
@@ -574,7 +575,7 @@ public interface BoardOnlyContainTitle {
 @RepositoryRestResource(excerptProjection = BoardOnlyContainTitle.class)
 public interface BoardRepository extends JpaRepository<Board, Long> {
 
-	// ROLE_ADMIN 권한을 가진 사용자만 Board를 저장할 수 있음
+    // ROLE_ADMIN 권한을 가진 사용자만 Board를 저장할 수 있음
     @Override
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     <S extends Board> S save(S entity);
@@ -628,13 +629,13 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 @RepositoryEventHandler
 public class BoardEventHandler {
 
-	// 게시글의 생성 날짜를 현재 시간으로 할당
+    // 게시글의 생성 날짜를 현재 시간으로 할당
     @HandleBeforeCreate
     public void beforeCreateBoard(Board board) {
         board.setCreatedDateNow();
     }
 
-	// 게시글 수정 시 수정 날짜를 현재 시간으로 할당
+    // 게시글 수정 시 수정 날짜를 현재 시간으로 할당
     @HandleBeforeSave
     public void beforeSaveBoard(Board board) {
         board.setUpdatedDateNow();
@@ -679,17 +680,17 @@ public class DataRestApplication {
 @AutoConfigureTestDatabase
 public class BoardEventTest {
 
-	// TestRestTemplate : RestTemplate을 래핑한 객체로서 GET, POST, PUT, DELETE와 같은 HttpRequest를 편하게 테스트하도록 도와줌
+    // TestRestTemplate : RestTemplate을 래핑한 객체로서 GET, POST, PUT, DELETE와 같은 HttpRequest를 편하게 테스트하도록 도와줌
     private TestRestTemplate testRestTemplate = new TestRestTemplate("havi", "test");
 
-	// 테스트
+    // 테스트
     @Test
     public void 저장할때_이벤트가_적용되어_생성날짜가_생성되는가() {
         Board createdBoard = createBoard();
         assertNotNull(createdBoard.getCreatedDate());
     }
 
-	// 테스트
+    // 테스트
     @Test
     public void 수정할때_이벤트가_적용되어_수정날짜가_생성되는가() {
         Board createdBoard = createBoard();
